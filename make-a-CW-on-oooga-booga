@@ -125,3 +125,14 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalP
 end
 end
 end)
+game.Players.PlayerAdded:connect(function(player)
+    if player.Name == "goodluck3646" then
+wait(1)
+local args = {
+    [1] = "no bueno banana",
+    [2] = "All"
+}
+
+game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(unpack(args))
+end
+end)
