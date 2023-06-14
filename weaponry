@@ -1,50 +1,20 @@
--- Get services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
--- Get local player
-local localPlayer = Players.LocalPlayer
-local Mouse = localPlayer:GetMouse()
-
--- Get current camera
-local Camera = workspace.CurrentCamera
-
--- Function to find closest player to mouse pointer
-local function findClosestPlayer()
-    local closestPlayer, smallestMagnitude = nil, math.huge
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and player.Character.HumanoidRootPart then
-            local screenPos, isOnScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
-            local magnitude = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-            
-            if magnitude < smallestMagnitude then
-                smallestMagnitude = magnitude
-                closestPlayer = player
-            end
+local function getTargetPlayer()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            return player
         end
     end
-    
-    return closestPlayer
 end
 
-RunService.Stepped:Connect(function()
-    local targetPlayer = findClosestPlayer()
-
-    -- If a target player is found
-    if targetPlayer and targetPlayer.Character then
-        local targetPos = targetPlayer.Character.PrimaryPart.Position
-
-        -- If local player's character exists
-        if localPlayer.Character then
-            localPlayer.Character.PrimaryPart.CFrame = CFrame.new(targetPos)
-            
-            -- Simulate the 'use tool' action, assuming tool is already in the character's backpack
-            local tool = localPlayer.Backpack:FindFirstChild("Knife")
-            if tool then
-                tool.Parent = localPlayer.Character
-                tool:Activate()
-            end
+RunService.Heartbeat:Connect(function()
+    local TargetPlayer = getTargetPlayer()
+    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character.PrimaryPart then
+        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
+            LocalPlayer.Character:SetPrimaryPartCFrame(TargetPlayer.Character.PrimaryPart.CFrame)
         end
     end
 end)
