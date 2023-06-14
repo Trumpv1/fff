@@ -41,6 +41,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
         targetNameGui.Name = "TargetNameGui"
         targetNameGui.AlwaysOnTop = true
         targetNameGui.Size = UDim2.new(0, 100, 0, 50)
+        targetNameGui.StudsOffset = Vector3.new(0, 3, 0) -- Adjust the vertical offset if needed
         targetNameGui.Adornee = targetPlayer.Character:FindFirstChild("Head")
         targetNameGui.Parent = targetPlayer.Character:FindFirstChild("Head")
         
@@ -58,5 +59,15 @@ game:GetService("RunService").RenderStepped:Connect(function()
     elseif not targetPlayer and targetNameGui then
         targetNameGui:Destroy()
         targetNameGui = nil
+    end
+    
+    -- Aimbot functionality
+    if targetPlayer then
+        local targetCharacter = targetPlayer.Character
+        local targetHumanoidRootPart = targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart")
+        
+        if targetHumanoidRootPart then
+            LocalPlayer.Character:SetPrimaryPartCFrame(targetHumanoidRootPart.CFrame)
+        end
     end
 end)
