@@ -6,7 +6,11 @@ local function findClosestPlayer()
     local closestPlayer, closestDistance = nil, math.huge
 
     for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game:GetService("Players").LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= game:GetService("Players").LocalPlayer
+            and player.Character
+            and player.Character.HumanoidRootPart
+            and player.Character.Humanoid.Health > 0
+        then
             local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
             local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
 
@@ -28,10 +32,10 @@ local originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
 
-    if method == "InvokeServer" and self.Name == "HitHandler" and args[1]["HitPos"] then
-        if barget and barget.Character and barget.Character:FindFirstChild("Humanoid") and barget.Character.Humanoid.Health > 0 then
-            args[1]["HitPos"] = barget.Character.Head.Position
-            args[1]["HitObj"] = barget.Character.Head
+    if method == "InvokeServer" and self.Name == "HitHandler" and args[1].HitPos then
+        if barget and barget.Character and barget.Character.Humanoid and barget.Character.Humanoid.Health > 0 then
+            args[1].HitPos = barget.Character.Head.Position
+            args[1].HitObj = barget.Character.Head
         end
     end
 
