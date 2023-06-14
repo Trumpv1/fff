@@ -1,48 +1,46 @@
 local Camera = workspace.CurrentCamera
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
+local barget
 
-local function findNearestPlayer()
-    local nearestPlayer, nearestDistance = nil, math.huge
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local character = player.Character
-            local humanoidRootPart = character.HumanoidRootPart
-            local screenPos, onScreen = Camera:WorldToScreenPoint(humanoidRootPart.Position)
+local function findClosestPlayer()
+    local closestPlayer, closestDistance = nil, math.huge
+
+    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= game:GetService("Players").LocalPlayer
+            and player.Character
+            and player.Character.HumanoidRootPart
+            and player.Character.Humanoid.Health > 0
+        then
+            local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
             local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-            
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestPlayer = player
+
+            if distance < closestDistance then
+                closestDistance = distance
+                closestPlayer = player
             end
         end
     end
-    
-    return nearestPlayer
+
+    return closestPlayer
 end
 
-local targetPlayer
 game:GetService("RunService").Stepped:Connect(function()
-    targetPlayer = findNearestPlayer()
+    barget = findClosestPlayer()
 end)
 
-local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+local originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
-    
-    if method == "InvokeServer" and Self.Name == "HitHandler" then
-        if args[1] and args[1]["HitPos"] then
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character.Humanoid and targetPlayer.Character.Humanoid.Health > 0 then
-                args[1]["HitPos"] = targetPlayer.Character.Head.Position
-                args[1]["HitObj"] = targetPlayer.Character.Head
-            end
+
+    if method == "InvokeServer" and self.Name == "HitHandler" and args[1].HitPos then
+        if barget and barget.Character and barget.Character.Humanoid and barget.Character.Humanoid.Health > 0 then
+            args[1].HitPos = barget.Character.Head.Position
+            args[1].HitObj = barget.Character.Head
         end
     end
-    
-    return oldNamecall(Self, unpack(args))
+
+    return originalNamecall(self, unpack(args))
 end)
 
 local notifications = loadstring(game:HttpGet("https://pastebin.com/raw/kSLQbpjV"))()
-notifications.prompt('I like oily black men', 'This script was made by oooga booga')
+notifications.prompt('I like oily black men', 'This was made by oooga booga')
