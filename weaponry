@@ -25,43 +25,9 @@ local function findNearestPlayer()
     return nearestPlayer
 end
 
-local targetPlayer
-local targetNameGui
-
 game:GetService("RunService").RenderStepped:Connect(function()
-    local previousTargetPlayer = targetPlayer
-    targetPlayer = findNearestPlayer()
+    local targetPlayer = findNearestPlayer()
     
-    if targetPlayer and targetPlayer ~= previousTargetPlayer then
-        if targetNameGui then
-            targetNameGui:Destroy()
-        end
-        
-        targetNameGui = Instance.new("BillboardGui")
-        targetNameGui.Name = "TargetNameGui"
-        targetNameGui.AlwaysOnTop = true
-        targetNameGui.Size = UDim2.new(0, 100, 0, 50)
-        targetNameGui.StudsOffset = Vector3.new(0, 3, 0) -- Adjust the vertical offset if needed
-        targetNameGui.Adornee = targetPlayer.Character:FindFirstChild("Head")
-        targetNameGui.Parent = targetPlayer.Character:FindFirstChild("Head")
-        
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Name = "NameLabel"
-        nameLabel.Size = UDim2.new(1, 0, 1, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Font = Enum.Font.SourceSansBold
-        nameLabel.TextSize = 14
-        nameLabel.TextColor3 = Color3.new(1, 1, 1)
-        nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-        nameLabel.TextStrokeTransparency = 0
-        nameLabel.Text = targetPlayer.Name
-        nameLabel.Parent = targetNameGui
-    elseif not targetPlayer and targetNameGui then
-        targetNameGui:Destroy()
-        targetNameGui = nil
-    end
-    
-    -- Aimbot functionality
     if targetPlayer then
         local targetCharacter = targetPlayer.Character
         local targetHumanoidRootPart = targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart")
