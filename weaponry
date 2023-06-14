@@ -1,40 +1,50 @@
-local Camera = workspace.CurrentCamera
-local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
+-- Get services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local function ewqeqweqwe()
-    local nigloo, galigagoo = nil, math.huge
+-- Get local player
+local localPlayer = Players.LocalPlayer
+local Mouse = localPlayer:GetMouse()
+
+-- Get current camera
+local Camera = workspace.CurrentCamera
+
+-- Function to find closest player to mouse pointer
+local function findClosestPlayer()
+    local closestPlayer, smallestMagnitude = nil, math.huge
     
-    for i,venis in pairs(game:GetService("Players"):GetPlayers()) do
-        if (venis.Name ~= game:GetService("Players").LocalPlayer.Name and venis.Character and venis.Character.HumanoidRootPart) then
-            local ScreenPos, OnScreen = Camera:WorldToScreenPoint(venis.Character.HumanoidRootPart.Position)
-            local galoogaboo = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character.HumanoidRootPart then
+            local screenPos, isOnScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
+            local magnitude = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
             
-            if (galoogaboo < galigagoo) then
-                galigagoo = galoogaboo
-                nigloo = venis
+            if magnitude < smallestMagnitude then
+                smallestMagnitude = magnitude
+                closestPlayer = player
             end
         end
     end
     
-    return nigloo
+    return closestPlayer
 end
-local barget
-game:GetService("RunService").Stepped:Connect(function()
-    barget = ewqeqweqwe()
+
+RunService.Stepped:Connect(function()
+    local targetPlayer = findClosestPlayer()
+
+    -- If a target player is found
+    if targetPlayer and targetPlayer.Character then
+        local targetPos = targetPlayer.Character.PrimaryPart.Position
+
+        -- If local player's character exists
+        if localPlayer.Character then
+            localPlayer.Character.PrimaryPart.CFrame = CFrame.new(targetPos)
+            
+            -- Simulate the 'use tool' action, assuming tool is already in the character's backpack
+            local tool = localPlayer.Backpack:FindFirstChild("Knife")
+            if tool then
+                tool.Parent = localPlayer.Character
+                tool:Activate()
+            end
+        end
+    end
 end)
-local zaza
-zaza = hookmetamethod(game, "__namecall", function(Self, ...)
-local fffff = {...}
-local Method = getnamecallmethod()
-if Method == "InvokeServer" and Self.Name == "HitHandler" then
-if fffff[1]["HitPos"] then
-            if (barget and barget.Character and barget.Character.Humanoid and barget.Character.Humanoid.Health ~= 0) then
-fffff[1]["HitPos"] = barget.Character.Head.Position
-fffff[1]["HitObj"] = barget.Character.Head
-end
-end
-end
-return zaza(Self, unpack(fffff))
-end)
-local notifications = loadstring(game:HttpGet("https://pastebin.com/raw/kSLQbpjV"))()
-notifications.prompt('i like oily black men', 'This was made by oooga booga')
