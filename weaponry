@@ -1,20 +1,37 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 
-local function getTargetPlayer()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            return player
+local function findClosestPlayer()
+    local closestPlayer, smallestMagnitude = nil, math.huge
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character.PrimaryPart then
+            local screenPos, isOnScreen = Camera:WorldToScreenPoint(player.Character.PrimaryPart.Position)
+            local magnitude = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+            
+            if magnitude < smallestMagnitude then
+                smallestMagnitude = magnitude
+                closestPlayer = player
+            end
         end
     end
+    
+    return closestPlayer
 end
 
 RunService.Heartbeat:Connect(function()
-    local TargetPlayer = getTargetPlayer()
-    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character.PrimaryPart then
-        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
-            LocalPlayer.Character:SetPrimaryPartCFrame(TargetPlayer.Character.PrimaryPart.CFrame)
+    local targetPlayer = findClosestPlayer()
+    
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character.PrimaryPart and LocalPlayer.Character then
+        LocalPlayer.Character:SetPrimaryPartCFrame(targetPlayer.Character.PrimaryPart.CFrame)
+        
+        local tool = LocalPlayer.Backpack:FindFirstChild("Knife")
+        if tool then
+            tool.Parent = LocalPlayer.Character
+            tool:Activate()
         end
     end
 end)
