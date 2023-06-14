@@ -26,13 +26,7 @@ end
 
 local targetPlayer
 game:GetService("RunService").Stepped:Connect(function()
-    local previousTargetPlayer = targetPlayer
     targetPlayer = findNearestPlayer()
-    
-    if targetPlayer and targetPlayer ~= previousTargetPlayer then
-        print("New target acquired:", targetPlayer.Name)
-        -- You can replace the print statement with your desired notification display logic
-    end
 end)
 
 local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
