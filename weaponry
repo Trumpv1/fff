@@ -2,15 +2,11 @@ local Camera = workspace.CurrentCamera
 local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local barget
 
-local function findClosestPlayer()
+local function FindNearestPlayer()
     local closestPlayer, closestDistance = nil, math.huge
 
     for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game:GetService("Players").LocalPlayer
-            and player.Character
-            and player.Character.HumanoidRootPart
-            and player.Character.Humanoid.Health > 0
-        then
+        if player ~= game:GetService("Players").LocalPlayer and player.Character and player.Character.HumanoidRootPart then
             local screenPos, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
             local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
 
@@ -25,22 +21,25 @@ local function findClosestPlayer()
 end
 
 game:GetService("RunService").Stepped:Connect(function()
-    barget = findClosestPlayer()
+    barget = FindNearestPlayer()
 end)
 
-local originalNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+local originalNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     local args = {...}
     local method = getnamecallmethod()
-
-    if method == "InvokeServer" and self.Name == "HitHandler" and args[1].HitPos then
-        if barget and barget.Character and barget.Character.Humanoid and barget.Character.Humanoid.Health > 0 then
-            args[1].HitPos = barget.Character.Head.Position
-            args[1].HitObj = barget.Character.Head
+    
+    if method == "InvokeServer" and Self.Name == "HitHandler" then
+        if args[1] and args[1]["HitPos"] then
+            if barget and barget.Character and barget.Character.Humanoid and barget.Character.Humanoid.Health > 0 then
+                args[1]["HitPos"] = barget.Character.Head.Position
+                args[1]["HitObj"] = barget.Character.Head
+            end
         end
     end
-
-    return originalNamecall(self, unpack(args))
+    
+    return originalNamecall(Self, unpack(args))
 end)
 
+-- Example notification library
 local notifications = loadstring(game:HttpGet("https://pastebin.com/raw/kSLQbpjV"))()
-notifications.prompt('I like oily black men', 'This was made by oooga booga')
+notifications.prompt('i like oily black men', 'This was made by oooga booga')
