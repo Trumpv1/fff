@@ -1,23 +1,6 @@
-local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "TargetDisplay"
-ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
-
-local TextLabel = Instance.new("TextLabel")
-TextLabel.Name = "TargetName"
-TextLabel.Size = UDim2.new(0, 200, 0, 50)
-TextLabel.Position = UDim2.new(0.5, -100, 0.9, 0)
-TextLabel.BackgroundTransparency = 1
-TextLabel.Font = Enum.Font.SourceSansBold
-TextLabel.TextSize = 18
-TextLabel.TextColor3 = Color3.new(1, 1, 1)
-TextLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-TextLabel.TextStrokeTransparency = 0
-TextLabel.Parent = ScreenGui
 
 local function findNearestPlayer()
     local nearestPlayer, nearestDistance = nil, math.huge
@@ -26,13 +9,15 @@ local function findNearestPlayer()
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local character = player.Character
             local humanoidRootPart = character.HumanoidRootPart
-            local screenPos, onScreen = Camera:WorldToScreenPoint(humanoidRootPart.Position)
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(humanoidRootPart.Position)
             
-            local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-            
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestPlayer = player
+            if onScreen then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                
+                if distance < nearestDistance then
+                    nearestDistance = distance
+                    nearestPlayer = player
+                end
             end
         end
     end
@@ -41,33 +26,37 @@ local function findNearestPlayer()
 end
 
 local targetPlayer
-game:GetService("RunService").Stepped:Connect(function()
+local targetNameGui
+
+game:GetService("RunService").RenderStepped:Connect(function()
     local previousTargetPlayer = targetPlayer
     targetPlayer = findNearestPlayer()
     
     if targetPlayer and targetPlayer ~= previousTargetPlayer then
-        TextLabel.Text = "Target: " .. targetPlayer.Name
-        TextLabel.Visible = true
-    elseif not targetPlayer then
-        TextLabel.Visible = false
-    end
-end)
-
-local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if method == "InvokeServer" and Self.Name == "HitHandler" then
-        if args[1] and args[1]["HitPos"] then
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") and targetPlayer.Character.Humanoid.Health ~= 0 then
-                args[1]["HitPos"] = targetPlayer.Character.Head.Position
-                args[1]["HitObj"] = targetPlayer.Character.Head
-            end
+        if targetNameGui then
+            targetNameGui:Destroy()
         end
+        
+        targetNameGui = Instance.new("BillboardGui")
+        targetNameGui.Name = "TargetNameGui"
+        targetNameGui.AlwaysOnTop = true
+        targetNameGui.Size = UDim2.new(0, 100, 0, 50)
+        targetNameGui.Adornee = targetPlayer.Character:FindFirstChild("Head")
+        targetNameGui.Parent = targetPlayer.Character:FindFirstChild("Head")
+        
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Name = "NameLabel"
+        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Font = Enum.Font.SourceSansBold
+        nameLabel.TextSize = 14
+        nameLabel.TextColor3 = Color3.new(1, 1, 1)
+        nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.Text = targetPlayer.Name
+        nameLabel.Parent = targetNameGui
+    elseif not targetPlayer and targetNameGui then
+        targetNameGui:Destroy()
+        targetNameGui = nil
     end
-    
-    return oldNamecall(Self, unpack(args))
 end)
-
-local notifications = loadstring(game:HttpGet("https://pastebin.com/raw/kSLQbpjV"))()
-notifications.prompt('I like oily black men', 'This script was made by oooga booga')
