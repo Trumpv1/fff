@@ -3,6 +3,39 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- Define the parameters for the circle
+local circleRadius = 150 -- Adjust this value as needed
+
+-- Create the circle GUI element (if you haven't already)
+local circle = Instance.new("Frame")
+circle.Name = "Circle"
+circle.AnchorPoint = Vector2.new(0.5, 0.5)
+circle.BackgroundTransparency = 1
+circle.BorderSizePixel = 0
+circle.Position = UDim2.new(0.5, 0, 0.5, 0)
+circle.Size = UDim2.new(0, circleRadius * 2, 0, circleRadius * 2)
+circle.ClipsDescendants = true
+circle.Parent = game:GetService("CoreGui")
+
+-- Create a visual indicator for the target
+local targetIndicator = Instance.new("Part")
+targetIndicator.Name = "TargetIndicator"
+targetIndicator.Anchored = true
+targetIndicator.CanCollide = false
+targetIndicator.Transparency = 0.5
+targetIndicator.Color = Color3.new(1, 0, 0) -- Red color for the indicator
+targetIndicator.Size = Vector3.new(3, 3, 3) -- Adjust size as needed
+targetIndicator.Parent = workspace
+
+-- Function to check if a point is inside the circle
+local function isInsideCircle(point)
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local distance = (point - screenCenter).Magnitude
+    
+    return distance <= circleRadius
+end
+
+-- Function to find the nearest player
 local function findNearestPlayer()
     local nearestPlayer, nearestDistance = nil, math.huge
     
@@ -11,11 +44,14 @@ local function findNearestPlayer()
             local character = player.Character
             local humanoidRootPart = character.HumanoidRootPart
             local screenPos, onScreen = Camera:WorldToScreenPoint(humanoidRootPart.Position)
-            local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
             
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestPlayer = player
+            if isInsideCircle(Vector2.new(screenPos.X, screenPos.Y)) then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                
+                if distance < nearestDistance then
+                    nearestDistance = distance
+                    nearestPlayer = player
+                end
             end
         end
     end
@@ -26,6 +62,17 @@ end
 local targetPlayer
 game:GetService("RunService").Stepped:Connect(function()
     targetPlayer = findNearestPlayer()
+    
+    -- Update target indicator position
+    if targetPlayer then
+        local character = targetPlayer.Character
+        local humanoidRootPart = character.HumanoidRootPart
+        
+        targetIndicator.Position = humanoidRootPart.Position + Vector3.new(0, humanoidRootPart.Size.Y / 2, 0)
+        targetIndicator.Parent = character
+    else
+        targetIndicator.Parent = nil
+    end
 end)
 
 local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
@@ -34,7 +81,7 @@ local oldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
     
     if method == "InvokeServer" and Self.Name == "HitHandler" then
         if args[1] and args[1]["HitPos"] then
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character.Humanoid and targetPlayer.Character.Humanoid.Health > 0 then
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") and targetPlayer.Character.Humanoid.Health ~= 0 then
                 args[1]["HitPos"] = targetPlayer.Character.Head.Position
                 args[1]["HitObj"] = targetPlayer.Character.Head
             end
