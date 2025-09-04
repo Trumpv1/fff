@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transparent 1080x1080 Image Scaler</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding-top: 30px; background: #f0f0f0; }
+    canvas { border: 1px dashed #aaa; display: block; margin: 20px auto; background: transparent; }
+    button { padding: 8px 16px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Upload Image (centered & scaled to 763.76px)</h2>
+<input type="file" accept="image/*" id="fileInput"><br>
+
+<canvas id="canvas" width="1080" height="1080"></canvas>
+<button id="downloadBtn" disabled>Download PNG</button>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  const TARGET_SIZE = 763.76;
+
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // Clear canvas (keep transparency)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate center offset
+      const x = (canvas.width - TARGET_SIZE) / 2;
+      const y = (canvas.height - TARGET_SIZE) / 2;
+
+      // Draw scaled image centered
+      ctx.drawImage(img, x, y, TARGET_SIZE, TARGET_SIZE);
+
+      // Enable download
+      downloadBtn.disabled = false;
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'canvas_output.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+</script>
+
+</body>
+</html>
